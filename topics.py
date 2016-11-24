@@ -33,15 +33,16 @@ if fraction < 0 or fraction > 1:
 
 file_list = []
 for path, dirs, files in os.walk(directory):
-    for file in files:
-        if file == ".DS_Store":
-            continue
-        else:
-            file_list.append((path,file))
+    for dir in dirs:
+        pa = path + "/" + dir
+        for p,d,f in os.walk(pa):
+            for fil in f:
+                file_list.append((path,dir,fil))
 
 for file in file_list:
-    print file
-
+    f = open(file[0]+"/"+file[1]+"/"+file[2],'r')
+    text = f.readlines()
+    print text
 
 
 
