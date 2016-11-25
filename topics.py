@@ -1,6 +1,8 @@
 import sys
 import os
-import glob
+import random
+import EmailParser
+import Model
 
 MODES = {"train", "test"}
 
@@ -31,18 +33,29 @@ if fraction < 0 or fraction > 1:
     print("Fraction should be equal or between 0 and 1")
     sys.exit(5)
 
+# Probability Coin flip function  (stack overflow)
+def flip(p):
+    return True if random.random() < p else False
+
+
+supervised_list = []
+unsupervised_list = []
 file_list = []
+class_list = []
+i = 0
 for path, dirs, files in os.walk(directory):
     for dir in dirs:
+        class_list.append(dir)
         pa = path + "/" + dir
-        for p,d,f in os.walk(pa):
+        for p, d, f in os.walk(pa):
             for fil in f:
-                file_list.append((path,dir,fil))
+                decision = flip(fraction)
+                if decision == True:
+                    classification = dir
+                    supervised_list.append((classification, fil))
+                else:
+                    unsupervised_list.append((pa,fil))
 
-for file in file_list:
-    f = open(file[0]+"/"+file[1]+"/"+file[2],'r')
-    text = f.readlines()
-    print text
-
-
+Model = Model.Model()
+Model.train(supervised_list, unsupervised_list, class_list)
 
