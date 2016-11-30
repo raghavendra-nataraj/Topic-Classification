@@ -51,11 +51,14 @@ for path, dirs, files in os.walk(directory):
     break
 for folders in dirs:
     email_text = p.parse(directory + "/" + folders + "/")
-    decision = flip(fraction)
-    if decision == True:
-        classification = folders
-        supervised_list.append((email_text,folders))
-    else:
+    if mode == "train":
+        decision = flip(fraction)
+        if decision == True:
+            classification = folders
+            supervised_list.append((email_text,folders))
+        else:
+            unsupervised_list.append(email_text)
+    elif mode == "test":
         unsupervised_list.append(email_text)
 
 if mode == "train":
@@ -65,26 +68,30 @@ if mode == "train":
 if mode == "test":
     model = Model.Model()
     model.load(file_path)
-    print model
+    # print model
     true_positive = 0
     true_negative = 0
     false_positive = 0
     false_negative = 0
-    for text in email_texts:
-        prediction = model.test(text)
-        if prediction == "spam":
-            true_positive += 1
-        else:
-            false_negative += 1
-    for text in non_spam_email_texts:
-        prediction = model.test(text)
-        if prediction == "notspam":
-            true_negative += 1
-        else:
-            false_positive += 1
-    print len(spam_email_texts)
-    print len(non_spam_email_texts)
-    print("True Positive" + str(true_positive))
-    print("True Negative" + str(true_negative))
-    print("False Positive" + str(false_positive))
-    print("False Negative" + str(false_negative))
+    for files in unsupervised_list:
+        for text in files:
+            if text == []:
+                for a in files:
+                    print a
+            prediction = model.test(text,dirs)
+            print prediction
+    #     if prediction == "spam":
+    #         true_positive += 1
+    #     else:
+    #         false_negative += 1
+    # for text in unsupervised_list:
+    #     prediction = model.test(text)
+    #     if prediction == "notspam":
+    #         true_negative += 1
+    #     else:
+    #         false_positive += 1
+    # print len(unsupervised_list)
+    # print("True Positive" + str(true_positive))
+    # print("True Negative" + str(true_negative))
+    # print("False Positive" + str(false_positive))
+    # print("False Negative" + str(false_negative))
