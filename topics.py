@@ -75,10 +75,10 @@ if mode == "test":
     false_negative = 0
     for files in unsupervised_list:
         for text in files:
-            if text == []:
-                for a in files:
-                    print a
-            prediction = model.test(text,dirs)
+            if len(text) == 0:
+                prediction = "atheism"
+            else:
+                prediction = model.test(text,dirs)
             print prediction
     #     if prediction == "spam":
     #         true_positive += 1

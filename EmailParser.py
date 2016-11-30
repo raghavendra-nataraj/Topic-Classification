@@ -107,21 +107,34 @@ class Parser:
                         if "html" in parts.get_content_type():
                             # print("==================================" + file + "==================================")
                             current_message = parts.get_payload()
-                            email_texts.append(self.html_handler(current_message))
+                            tmp = self.html_handler(current_message)
+                            # if len(tmp) == 0:
+                            #     print file
+                            email_texts.append(tmp)
                         elif "plain" in ctype:
                             text = parts.get_payload()
-                            email_texts.append(self.plain_handler(text))
+                            tmp = self.plain_handler(text)
+                            # if len(tmp) == 0:
+                            #     print file
+                            email_texts.append(tmp)
                             # filtered_words = [word.lower() for word in text.split() if word not in self.stops]
                             # stemmed_words = [stem(word) for word in filtered_words]
                             # email_texts.append(stemmed_words)
             elif "html" in ctype:
                 # print("=================================="+file+"==================================")
                 current_message = result.get_payload()
-                email_texts.append(self.html_handler(current_message))
+                tmp = self.html_handler(current_message)
+                # if len(tmp) == 0:
+                #     print file
+                email_texts.append(tmp)
             elif "plain" in ctype:
                 text = result.get_payload()
-                email_texts.append(self.plain_handler(text))
+                tmp = self.plain_handler(text)
+                # if len(tmp) == 0:
+                #     print file
+                email_texts.append(tmp)
                 # email_texts.append(stemmed_words)
                 # else:
                 #    print ctype
+
         return email_texts
