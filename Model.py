@@ -141,6 +141,7 @@ class Model:
             cost = 0
             for file in text:
                 for word in file:
+
                     curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
                     if word in self.ld_costs[classes]:
                         curr_cost = self.ld_costs[classes][word]
@@ -153,13 +154,14 @@ class Model:
     def load(self, file_path):
         with open(file_path, "r") as fp:
             content = [x.strip('\n') for x in fp.readlines()]
-        current_counter = content.pop(0).split(":")[1]
+        current_counter = int(content.pop(0).split(":")[1])
+
         while current_counter > 0:
             current_counter -= 1
             next_row = content.pop(0)
             split_value = next_row.split(":")
             self.prior_counts[split_value[0]] = float(split_value[1])
-        current_counter = content.pop(0).split(":")[1]
+        current_counter = int(content.pop(0).split(":")[1])
         while (current_counter > 0):
             current_counter -= 1
             next_row = content.pop(0)
@@ -171,11 +173,13 @@ class Model:
             for index in range(2, len(split_value) - 1):
                 # print split_value[index]
                 word += ":" + split_value[index]
+            if split_value[len(split_value)-1] == "":
+                split_value[len(split_value) - 1] = 0
             if split_value[0] in self.ld_counts:
                 self.ld_counts[split_value[0]][word] = float(split_value[len(split_value) - 1])
             else:
                 tmp = {}
-                tmp[word] = float(split_value[len(split_value) - 1])
+                tmp[word] = (float(split_value[len(split_value) - 1]))/1.0
                 self.ld_counts[split_value[0]] = tmp
 
                 # print self.ld
