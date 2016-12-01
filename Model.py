@@ -141,12 +141,13 @@ class Model:
             cost = 0
             for file in text:
                 for word in file:
-
-                    curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
-                    if word in self.ld_costs[classes]:
-                        curr_cost = self.ld_costs[classes][word]
-                    cost += curr_cost
-                result_dict[classes] = cost + self.prior_costs[classes]
+                    if classes in self.class_word_counts:                                   #not sure if this is correct
+                        curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
+                        if word in self.ld_costs[classes]:
+                            curr_cost = self.ld_costs[classes][word]
+                        cost += curr_cost
+                if classes in result_dict:
+                    result_dict[classes] = cost + self.prior_costs[classes]
 
         if len(result_dict) > 0:
             return min(result_dict.iteritems(), key=operator.itemgetter(1))[0]

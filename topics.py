@@ -55,11 +55,11 @@ for folders in dirs:
         decision = flip(fraction)
         if decision == True:
             classification = folders
-            supervised_list.append((email_text,folders))
+            supervised_list.append((email_text, folders))
         else:
-            unsupervised_list.append((email_text,folders))
+            unsupervised_list.append((email_text, folders))
     elif mode == "test":
-        unsupervised_list.append((email_text,folders))
+        unsupervised_list.append((email_text, folders))
 
 if mode == "train":
     model = Model.Model()
@@ -80,16 +80,12 @@ if mode == "test":
             if len(text) == 0:
                 prediction = "atheism"
             else:
-                prediction = model.test(text,dirs)
+                prediction = model.test(text, dirs)
             print prediction
-            if prediction==files[1]:
-                result_dictionary[file[1]]["yes"]+=1
-            else:
-                result_dictionary[file[1]]["no"] += 1
-
+            if prediction != None:
+                if prediction == files[1]:
+                    result_dictionary[prediction]['yes'] += 1
+                else:
+                    result_dictionary[prediction]['no'] += 1
 
     pprint.pprint(result_dictionary)
-
-
-
-
