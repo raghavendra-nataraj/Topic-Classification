@@ -32,15 +32,16 @@ class Model:
         self.calculate_sl_counts(sl)
         self.calculate_probabilties(use_unsupervised=False)
         train_counter = 0
-        while (train_counter < 1000):
-            train_counter += 1
-            ul_with_class = []
-            for document in ul:
-                predicted_class = self.test(document, class_list)
-                ul_with_class.append(document, predicted_class)
+        if len(ul)>0:
+            while (train_counter < 1000):
+                train_counter += 1
+                ul_with_class = []
+                for document in ul:
+                    predicted_class = self.test(document, class_list)
+                    ul_with_class.append(document, predicted_class)
 
-            self.calculate_ul_counts(ul_with_class)
-            self.calculate_probabilties(use_unsupervised=True)
+                self.calculate_ul_counts(ul_with_class)
+                self.calculate_probabilties(use_unsupervised=True)
 
     def calculate_sl_counts(self, sl_list):
         for file, classification in sl_list:

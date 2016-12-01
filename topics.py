@@ -54,15 +54,19 @@ for path, dirs, files in os.walk(directory):
     break
 for folders in dirs:
     email_text = p.parse(directory + "/" + folders + "/")
-    if mode == "train":
-        decision = flip(fraction)
-        if decision == True:
-            classification = folders
-            supervised_list.append((email_text, folders))
-        else:
-            unsupervised_list.append((email_text, folders))
-    elif mode == "test":
-        unsupervised_list.append((email_text, folders))
+    for f in email_text:
+        if mode == "train":
+            decision = flip(fraction)
+            if decision == True:
+                classification = folders
+                supervised_list.append((f, folders))
+            else:
+                unsupervised_list.append((f, folders))
+        elif mode == "test":
+            unsupervised_list.append((f, folders))
+
+pprint.pprint(unsupervised_list)
+pprint.pprint(supervised_list)
 
 if mode == "train":
     model = Model.Model()
