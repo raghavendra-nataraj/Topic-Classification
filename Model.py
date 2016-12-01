@@ -1,5 +1,5 @@
 import sys
-import re
+import pprint
 import math
 import operator
 import ModelNotEmptyException
@@ -139,15 +139,12 @@ class Model:
         result_dict = {}
         for classes in class_list:
             cost = 0
-            for file in text:
-                for word in file:
-                    if classes in self.class_word_counts:                                   #not sure if this is correct
-                        curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
-                        if word in self.ld_costs[classes]:
-                            curr_cost = self.ld_costs[classes][word]
-                        cost += curr_cost
-                if classes in result_dict:
-                    result_dict[classes] = cost + self.prior_costs[classes]
+            for word in text:
+                curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
+                if word in self.ld_costs[classes]:
+                    curr_cost = self.ld_costs[classes][word]
+                cost += curr_cost
+            result_dict[classes] = cost + self.prior_costs[classes]
 
         if len(result_dict) > 0:
             return min(result_dict.iteritems(), key=operator.itemgetter(1))[0]
@@ -161,12 +158,13 @@ class Model:
             current_counter -= 1
             next_row = content.pop(0)
             split_value = next_row.split(":")
-            self.prior_counts[split_value[0]] = float(split_value[1])
+            self.prior_costs[split_value[0]] = float(split_value[1])
         current_counter = int(content.pop(0).split(":")[1])
-        while (current_counter > 0):
+        while (current_counter >0):
             current_counter -= 1
             next_row = content.pop(0)
             split_value = next_row.split(":")
+            self.class_word_counts[split_value[0]]=float(split_value[1])
 
         for likelihoods in content:
             split_value = likelihoods.split(":")
@@ -176,11 +174,9 @@ class Model:
                 word += ":" + split_value[index]
             if split_value[len(split_value)-1] == "":
                 split_value[len(split_value) - 1] = 0
-            if split_value[0] in self.ld_counts:
-                self.ld_counts[split_value[0]][word] = float(split_value[len(split_value) - 1])
+            if split_value[0] in self.ld_costs:
+                self.ld_costs[split_value[0]][word] = float(split_value[len(split_value) - 1])
             else:
                 tmp = {}
                 tmp[word] = (float(split_value[len(split_value) - 1]))/1.0
-                self.ld_counts[split_value[0]] = tmp
-
-                # print self.ld
+                self.ld_costs[split_value[0]] = tmp

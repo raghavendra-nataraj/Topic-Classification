@@ -11,11 +11,14 @@ try:
     mode = sys.argv[1]
     directory = sys.argv[2]
     file_path = sys.argv[3]
-    fraction = sys.argv[4]
 except IndexError:
     print("Usage: python topics.py mode dataset-directory model-file")
     sys.exit(1)
-
+fraction=1
+try:
+    fraction = sys.argv[4]
+except IndexError:
+    pass
 if mode not in MODES:
     print("Invalid mode. Allowed values: train, test")
     sys.exit(2)
@@ -71,21 +74,23 @@ if mode == "test":
     # print model
 
     result_dictionary = {}
-    tmp = {"yes": 0, "no": 0}
     for classes in dirs:
-        result_dictionary[classes] = tmp
-
-    for files in unsupervised_list:
-        for text in files[0]:
+        result_dictionary[classes] = {"yes": 0, "no": 0}
+    successes=0
+    totals=0
+    for file_list, topic in unsupervised_list:
+        for text in file_list:
             if len(text) == 0:
                 prediction = "atheism"
             else:
                 prediction = model.test(text, dirs)
-            print prediction
             if prediction != None:
-                if prediction == files[1]:
-                    result_dictionary[prediction]['yes'] += 1
+                totals+=1
+                if prediction == topic:
+                    result_dictionary[topic]['yes'] += 1
+                    successes+=1
                 else:
-                    result_dictionary[prediction]['no'] += 1
+                    result_dictionary[topic]['no'] += 1
 
     pprint.pprint(result_dictionary)
+    pprint.pprint((1.0*successes)/totals)
