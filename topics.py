@@ -3,6 +3,7 @@ import os
 import random
 import EmailParser
 import Model
+import pprint
 
 MODES = {"train", "test"}
 
@@ -44,7 +45,6 @@ p = EmailParser.Parser()
 supervised_list = []
 unsupervised_list = []
 file_list = []
-class_list = []
 i = 0
 dirs = []
 for path, dirs, files in os.walk(directory):
@@ -57,41 +57,39 @@ for folders in dirs:
             classification = folders
             supervised_list.append((email_text,folders))
         else:
-            unsupervised_list.append(email_text)
+            unsupervised_list.append((email_text,folders))
     elif mode == "test":
-        unsupervised_list.append(email_text)
+        unsupervised_list.append((email_text,folders))
 
 if mode == "train":
     model = Model.Model()
-    model.train(supervised_list, unsupervised_list, class_list)
+    model.train(supervised_list, unsupervised_list, dirs)
     model.save(file_path)
 if mode == "test":
     model = Model.Model()
     model.load(file_path)
     # print model
-    true_positive = 0
-    true_negative = 0
-    false_positive = 0
-    false_negative = 0
+
+    result_dictionary = {}
+    tmp = {"yes": 0, "no": 0}
+    for classes in dirs:
+        result_dictionary[classes] = tmp
+
     for files in unsupervised_list:
-        for text in files:
+        for text in files[0]:
             if len(text) == 0:
                 prediction = "atheism"
             else:
                 prediction = model.test(text,dirs)
             print prediction
-    #     if prediction == "spam":
-    #         true_positive += 1
-    #     else:
-    #         false_negative += 1
-    # for text in unsupervised_list:
-    #     prediction = model.test(text)
-    #     if prediction == "notspam":
-    #         true_negative += 1
-    #     else:
-    #         false_positive += 1
-    # print len(unsupervised_list)
-    # print("True Positive" + str(true_positive))
-    # print("True Negative" + str(true_negative))
-    # print("False Positive" + str(false_positive))
-    # print("False Negative" + str(false_negative))
+            if prediction==files[1]:
+                result_dictionary[file[1]]["yes"]+=1
+            else:
+                result_dictionary[file[1]]["no"] += 1
+
+
+    pprint.pprint(result_dictionary)
+
+
+
+
