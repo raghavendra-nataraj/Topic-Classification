@@ -136,12 +136,19 @@ class Model:
                     if prior not in ul_ld_costs:
                         ul_ld_costs[prior] = {}
                         ul_ld_costs[prior][word] = math.log(1 / curr_prob)
-                        
+
         for sl_priors in sl_ld_costs.iterkeys():
-            self.ld_costs[sl_priors]=dict(Counter(sl_ld_costs[sl_priors]) + Counter(ul_ld_costs[sl_priors]))
+            if sl_priors in ul_ld_costs:
+                self.ld_costs[sl_priors]=dict(Counter(sl_ld_costs[sl_priors]) + Counter(ul_ld_costs[sl_priors]))
+            else:
+                self.ld_costs=dict(Counter(sl_ld_costs[sl_priors]))
 
         for ul_priors in ul_ld_costs.iterkeys():
-            self.ld_costs[ul_priors]=dict(Counter(sl_ld_costs[ul_priors]) + Counter(ul_ld_costs[ul_priors]))
+            if ul_priors in sl_ld_costs:
+                self.ld_costs[ul_priors] = dict(Counter(sl_ld_costs[ul_priors]) + Counter(ul_ld_costs[ul_priors]))
+            else:
+                self.ld_costs=dict(Counter(ul_ld_costs[ul_priors]))
+            
 
         for prior, count in self.prior_counts.iteritems():
             current_count = sum(self.ld_counts[prior].itervalues()) + 0.1
@@ -167,7 +174,10 @@ class Model:
         for classes in class_list:
             cost = 0
             for word in text:
-                curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
+                if classes not in self.class_word_counts:
+                    curr_cost=float("Inf")
+                else:
+                    curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
 
                 if word in self.ld_costs[classes]:
                     curr_cost = self.ld_costs[classes][word]
