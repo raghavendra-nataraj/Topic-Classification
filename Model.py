@@ -1,12 +1,9 @@
 import sys
-import pprint
 import math
 import operator
 from collections import Counter
-import ModelNotEmptyException
-from copy import deepcopy
 
-sys.setrecursionlimit(9999)
+from copy import deepcopy
 
 
 class Model:
@@ -18,10 +15,10 @@ class Model:
     us_ld_counts = None
     class_word_counts = None
 
-    def __init__(self,topic_list):
+    def __init__(self, topic_list):
         self.prior_counts = {}
         for topic in topic_list:
-            self.prior_counts[topic]=1
+            self.prior_counts[topic] = 1
         self.ld_counts = {}
         self.prior_costs = {}
         self.old_priorlist = {}
@@ -31,26 +28,17 @@ class Model:
         self.us_ld_counts = {}
         self.class_word_counts = {}
 
-    # def __str__(self):
-    #     ret_string = ""
-    #     ret_string += "Top 10 words associated with spam (with strength of association):\n"
-    #     ret_string += pprint.pformat(str(self.prior_counts)) + "\n"
-    #     ret_string += pprint.pformat(str(self.prior_costs)) + "\n"
-    #     ret_string += pprint.pformat(str(self.us_prior_counts)) + "\n"
-    #     ret_string += pprint.pformat(str(self.class_word_counts)) + "\n"
-    #     return ret_string
-
     def checkCountSame(self):
-        result=True
+        result = True
         for key in self.us_prior_counts.keys():
             if key not in self.old_us_prior:
                 result = False
                 break
-            if (self.old_us_prior[key] - self.us_prior_counts[key])>10:
+            if (self.old_us_prior[key] - self.us_prior_counts[key]) > 10:
                 result = False
                 break
         return result
-    
+
     def train(self, sl, ul, class_list):
         # training using the supervised learning list
 
@@ -71,7 +59,6 @@ class Model:
                 self.calculate_unsupervised_probabilities()
                 if self.checkCountSame():
                     break
-
 
     def calculate_sl_counts(self, sl_list):
         for word_list, topic in sl_list:
@@ -108,18 +95,19 @@ class Model:
                     self.us_ld_counts[classification][w] = 1
 
     def calculate_unsupervised_probabilities(self):
-        mixed_prior_counts=dict(Counter(self.prior_costs) + Counter(self.us_prior_counts))
-        total_count=sum(mixed_prior_counts.itervalues())
+        mixed_prior_counts = dict(Counter(self.prior_costs) + Counter(self.us_prior_counts))
+        total_count = sum(mixed_prior_counts.itervalues())
         for keys in mixed_prior_counts:
             numerator = float(mixed_prior_counts[keys])
             tmp = numerator / float(total_count)
             if tmp == 1.0:
                 tmp = .99
             self.prior_costs[keys] = math.log(1 / tmp)
-        mixed_ld_counts={}
+        mixed_ld_counts = {}
         for sl_priors in self.ld_counts.iterkeys():
             if sl_priors in self.us_ld_counts:
-                mixed_ld_counts[sl_priors] = dict(Counter(self.us_ld_counts[sl_priors]) + Counter(self.ld_counts[sl_priors]))
+                mixed_ld_counts[sl_priors] = dict(
+                    Counter(self.us_ld_counts[sl_priors]) + Counter(self.ld_counts[sl_priors]))
             else:
                 mixed_ld_counts[sl_priors] = dict(Counter(self.ld_counts[sl_priors]))
 
@@ -141,7 +129,7 @@ class Model:
 
     def calculate_supervised_probabilties(self):
         # Convert counts of the prior table to probability
-        total_counts=sum(self.prior_counts.itervalues())
+        total_counts = sum(self.prior_counts.itervalues())
         for keys in self.prior_counts:
             numerator = float(self.prior_counts[keys])
             tmp = numerator / float(total_counts)
@@ -149,12 +137,8 @@ class Model:
                 tmp = .99
             self.prior_costs[keys] = math.log(1 / tmp)
 
-
         # Convert counts of the likelihood table to probability
         for prior, word_counts in self.ld_counts.iteritems():
-            # for i in word_counts.itervalues():
-            #     current_count+= i
-
             current_count = sum([i for i in word_counts.itervalues()])
             for word, count in word_counts.iteritems():
                 numerator = count
@@ -162,11 +146,6 @@ class Model:
                 if prior not in self.ld_costs:
                     self.ld_costs[prior] = {}
                 self.ld_costs[prior][word] = math.log(1 / curr_prob)
-
-
-
-
-
 
         for prior, count in self.prior_counts.iteritems():
             if prior in self.ld_counts:
