@@ -33,7 +33,7 @@ class Model:
         self.calculate_probabilties(use_unsupervised=False)
         train_counter = 0
         if len(ul)>0:
-            while (train_counter < 10):
+            while (train_counter < 100):
                 train_counter += 1
                 ul_with_class = []
                 for document, topic in ul:
@@ -127,7 +127,7 @@ class Model:
     def save(self, file_path):
         with open(file_path, "w") as fp:
             fp.write("Priors:" + str(len(self.prior_costs)) + "\n")
-            for prior, count in self.prior_counts.iteritems():
+            for prior, count in self.prior_costs.iteritems():
                 fp.write(prior + ":" + str(count) + "\n")
             fp.write("LL Counts:" + str(len(self.prior_costs)) + "\n")
             for prior, count in self.class_word_counts.iteritems():
