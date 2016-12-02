@@ -17,6 +17,7 @@
 # probability of the unsupervised list in the training mode starts converging. By default, we have set the program to
 # stop if the difference in the prior probabilities is less than or equal to 10.
 
+
 import sys
 import os
 import random
@@ -117,3 +118,8 @@ if mode == "test":
 
     pprint.pprint(result_dictionary)
     pprint.pprint("Overall Accuracy:" +str((1.0*successes)/totals))
+
+
+# Accuracy 1 - 77%
+# Accuracy 0 - 3%
+# Accuracy 0.3 - 71%
