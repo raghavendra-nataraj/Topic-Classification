@@ -69,18 +69,16 @@ for folders in dirs:
 # pprint.pprint(supervised_list)
 
 if mode == "train":
-    model = Model.Model()
+    model = Model.Model(dirs)
     model.train(supervised_list, unsupervised_list, dirs)
-    print(model)
     model.save(file_path)
 if mode == "test":
-    model = Model.Model()
+    model = Model.Model(dirs)
     model.load(file_path)
-    print model
 
     result_dictionary = {}
     for classes in dirs:
-        result_dictionary[classes] = {"yes": 0, "no": 0}
+        result_dictionary[classes] = {"Correct": 0, "Incorrect": 0}
     successes=0
     totals=0
     predictions={}
@@ -93,11 +91,10 @@ if mode == "test":
         if prediction != None:
             totals+=1
             if prediction == topic:
-                result_dictionary[topic]['yes'] += 1
+                result_dictionary[topic]['Correct'] += 1
                 successes+=1
             else:
-                result_dictionary[topic]['no'] += 1
+                result_dictionary[topic]['Incorrect'] += 1
 
     pprint.pprint(result_dictionary)
-    pprint.pprint((1.0*successes)/totals)
-    pprint.pprint(predictions)
+    pprint.pprint("Overall Accuracy:" +str((1.0*successes)/totals))
