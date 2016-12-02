@@ -33,49 +33,47 @@ class Model:
         self.calculate_probabilties(use_unsupervised=False)
         train_counter = 0
         if len(ul)>0:
-            while (train_counter < 1000):
+            while (train_counter < 10):
                 train_counter += 1
                 ul_with_class = []
-                for document in ul:
+                for document, topic in ul:
                     predicted_class = self.test(document, class_list)
-                    ul_with_class.append(document, predicted_class)
+                    ul_with_class.append((document, predicted_class))
 
                 self.calculate_ul_counts(ul_with_class)
                 self.calculate_probabilties(use_unsupervised=True)
 
     def calculate_sl_counts(self, sl_list):
-        for file, classification in sl_list:
+        for word_list, classification in sl_list:
             if classification in self.prior_counts:
                 self.prior_counts[classification] += 1
             else:
                 self.prior_counts[classification] = 1
-            for word_list in file:
-                for w in word_list:
-                    if classification in self.ld_counts:
-                        if w in self.ld_counts[classification]:
-                            self.ld_counts[classification][w] += 1
-                        else:
-                            self.ld_counts[classification][w] = 1
+            for w in word_list:
+                if classification in self.ld_counts:
+                    if w in self.ld_counts[classification]:
+                        self.ld_counts[classification][w] += 1
                     else:
-                        self.ld_counts[classification] = {}
                         self.ld_counts[classification][w] = 1
+                else:
+                    self.ld_counts[classification] = {}
+                    self.ld_counts[classification][w] = 1
 
     def calculate_ul_counts(self, ul_list):
-        for file, classification in ul_list:
+        for word_list, classification in ul_list:
             if classification in self.us_prior_counts:
                 self.us_prior_counts[classification] += 1
             else:
                 self.us_prior_counts[classification] = 1
-            for word_list in file:
-                for w in word_list:
-                    if classification in self.us_ld_counts:
-                        if w in self.us_ld_counts[classification]:
-                            self.us_ld_counts[classification][w] += 1
-                        else:
-                            self.us_ld_counts[classification][w] = 1
+            for w in word_list:
+                if classification in self.us_ld_counts:
+                    if w in self.us_ld_counts[classification]:
+                        self.us_ld_counts[classification][w] += 1
                     else:
-                        self.us_ld_counts[classification] = {}
                         self.us_ld_counts[classification][w] = 1
+                else:
+                    self.us_ld_counts[classification] = {}
+                    self.us_ld_counts[classification][w] = 1
 
     def calculate_probabilties(self, use_unsupervised=False):
         # Convert counts of the prior table to probability
@@ -108,7 +106,10 @@ class Model:
                 numerator = count
                 if use_unsupervised == True:
                     if prior in self.us_ld_counts:
-                        numerator += self.us_ld_counts[prior][word]
+                        curr_cost = math.log(1 / (0.1 / self.class_word_counts[prior]))
+                        if word in self.us_ld_counts[prior]:
+                            curr_cost = self.us_ld_counts[prior][word]
+                        numerator+=curr_cost
                 curr_prob = (1.0 * numerator) / current_count
                 if prior not in self.ld_costs:
                     self.ld_costs[prior] = {}
@@ -142,9 +143,11 @@ class Model:
             cost = 0
             for word in text:
                 curr_cost = math.log(1 / (0.1 / self.class_word_counts[classes]))
+
                 if word in self.ld_costs[classes]:
                     curr_cost = self.ld_costs[classes][word]
                 cost += curr_cost
+
             result_dict[classes] = cost + self.prior_costs[classes]
 
         if len(result_dict) > 0:

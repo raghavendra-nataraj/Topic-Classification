@@ -65,8 +65,8 @@ for folders in dirs:
         elif mode == "test":
             unsupervised_list.append((f, folders))
 
-pprint.pprint(unsupervised_list)
-pprint.pprint(supervised_list)
+# pprint.pprint(unsupervised_list)
+# pprint.pprint(supervised_list)
 
 if mode == "train":
     model = Model.Model()
