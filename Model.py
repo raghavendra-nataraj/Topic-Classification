@@ -26,13 +26,22 @@ class Model:
         self.us_ld_counts = {}
         self.class_word_counts = {}
 
+    def __str__(self):
+        ret_string = ""
+        ret_string += "Top 10 words associated with spam (with strength of association):\n"
+        ret_string += pprint.pformat(str(self.prior_counts)) + "\n"
+        ret_string += pprint.pformat(str(self.prior_costs)) + "\n"
+        ret_string += pprint.pformat(str(self.us_prior_counts)) + "\n"
+        ret_string += pprint.pformat(str(self.class_word_counts)) + "\n"
+        return ret_string
+
     def train(self, sl, ul, class_list):
         # training using the supervised learning list
 
         self.calculate_sl_counts(sl)
         self.calculate_probabilties(use_unsupervised=False)
         train_counter = 0
-        if len(ul)>0:
+        if len(ul) > 0:
             while (train_counter < 100):
                 train_counter += 1
                 ul_with_class = []
@@ -44,20 +53,20 @@ class Model:
                 self.calculate_probabilties(use_unsupervised=True)
 
     def calculate_sl_counts(self, sl_list):
-        for word_list, classification in sl_list:
-            if classification in self.prior_counts:
-                self.prior_counts[classification] += 1
+        for word_list, topic in sl_list:
+            if topic in self.prior_counts:
+                self.prior_counts[topic] += 1
             else:
-                self.prior_counts[classification] = 1
+                self.prior_counts[topic] = 1
             for w in word_list:
-                if classification in self.ld_counts:
-                    if w in self.ld_counts[classification]:
-                        self.ld_counts[classification][w] += 1
+                if topic in self.ld_counts:
+                    if w in self.ld_counts[topic]:
+                        self.ld_counts[topic][w] += 1
                     else:
-                        self.ld_counts[classification][w] = 1
+                        self.ld_counts[topic][w] = 1
                 else:
-                    self.ld_counts[classification] = {}
-                    self.ld_counts[classification][w] = 1
+                    self.ld_counts[topic] = {}
+                    self.ld_counts[topic][w] = 1
 
     def calculate_ul_counts(self, ul_list):
         for word_list, classification in ul_list:
@@ -109,7 +118,7 @@ class Model:
                         curr_cost = math.log(1 / (0.1 / self.class_word_counts[prior]))
                         if word in self.us_ld_counts[prior]:
                             curr_cost = self.us_ld_counts[prior][word]
-                        numerator+=curr_cost
+                        numerator += curr_cost
                 curr_prob = (1.0 * numerator) / current_count
                 if prior not in self.ld_costs:
                     self.ld_costs[prior] = {}
@@ -148,10 +157,8 @@ class Model:
                     curr_cost = self.ld_costs[classes][word]
                 cost += curr_cost
 
-            result_dict[classes] = cost + self.prior_costs[classes]
-
-        if len(result_dict) > 0:
-            return min(result_dict.iteritems(), key=operator.itemgetter(1))[0]
+            result_dict[classes] = cost # + self.prior_costs[classes]
+        return min(result_dict.iteritems(), key=operator.itemgetter(1))[0]
 
     def load(self, file_path):
         with open(file_path, "r") as fp:
@@ -164,11 +171,11 @@ class Model:
             split_value = next_row.split(":")
             self.prior_costs[split_value[0]] = float(split_value[1])
         current_counter = int(content.pop(0).split(":")[1])
-        while (current_counter >0):
+        while (current_counter > 0):
             current_counter -= 1
             next_row = content.pop(0)
             split_value = next_row.split(":")
-            self.class_word_counts[split_value[0]]=float(split_value[1])
+            self.class_word_counts[split_value[0]] = float(split_value[1])
 
         for likelihoods in content:
             split_value = likelihoods.split(":")
@@ -176,11 +183,11 @@ class Model:
             for index in range(2, len(split_value) - 1):
                 # print split_value[index]
                 word += ":" + split_value[index]
-            if split_value[len(split_value)-1] == "":
+            if split_value[len(split_value) - 1] == "":
                 split_value[len(split_value) - 1] = 0
             if split_value[0] in self.ld_costs:
                 self.ld_costs[split_value[0]][word] = float(split_value[len(split_value) - 1])
             else:
                 tmp = {}
-                tmp[word] = (float(split_value[len(split_value) - 1]))/1.0
+                tmp[word] = (float(split_value[len(split_value) - 1])) / 1.0
                 self.ld_costs[split_value[0]] = tmp

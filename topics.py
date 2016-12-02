@@ -71,30 +71,33 @@ for folders in dirs:
 if mode == "train":
     model = Model.Model()
     model.train(supervised_list, unsupervised_list, dirs)
+    print(model)
     model.save(file_path)
 if mode == "test":
     model = Model.Model()
     model.load(file_path)
-    # print model
+    print model
 
     result_dictionary = {}
     for classes in dirs:
         result_dictionary[classes] = {"yes": 0, "no": 0}
     successes=0
     totals=0
-    for file_list, topic in unsupervised_list:
-        for text in file_list:
-            if len(text) == 0:
-                prediction = "atheism"
+    predictions={}
+    for email_file, topic in unsupervised_list:
+        prediction = model.test(email_file, dirs)
+        if prediction not in predictions:
+            predictions[prediction]=0
+        predictions[prediction]+=1
+
+        if prediction != None:
+            totals+=1
+            if prediction == topic:
+                result_dictionary[topic]['yes'] += 1
+                successes+=1
             else:
-                prediction = model.test(text, dirs)
-            if prediction != None:
-                totals+=1
-                if prediction == topic:
-                    result_dictionary[topic]['yes'] += 1
-                    successes+=1
-                else:
-                    result_dictionary[topic]['no'] += 1
+                result_dictionary[topic]['no'] += 1
 
     pprint.pprint(result_dictionary)
     pprint.pprint((1.0*successes)/totals)
+    pprint.pprint(predictions)
