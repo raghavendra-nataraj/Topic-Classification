@@ -2,6 +2,7 @@ import sys
 import pprint
 import math
 import operator
+from collections import Counter
 import ModelNotEmptyException
 from copy import deepcopy
 
@@ -89,46 +90,61 @@ class Model:
         sums = 0.0
         for keys in self.prior_counts:
             sums += self.prior_counts[keys]
-            if use_unsupervised == True:
-                if keys in self.us_prior_counts:
-                    sums += self.us_prior_counts[keys]
 
+        sl_prior_costs = {}
         for keys in self.prior_counts:
             numerator = float(self.prior_counts[keys])
-            if use_unsupervised == True:
-                if keys in self.us_prior_counts:
-                    numerator += float(self.us_prior_counts[keys])
             tmp = numerator / float(sums)
             if tmp == 1.0:
                 tmp = .99
-            self.prior_costs[keys] = math.log(1 / tmp)
+            sl_prior_costs[keys] = math.log(1 / tmp)
+
+        ul_prior_costs = {}
+        if use_unsupervised == True:
+            for keys in self.us_prior_counts:
+                numerator = float(self.us_prior_counts[keys])
+                tmp = numerator / float(sums)
+                if tmp == 1.0:
+                    tmp = .99
+                ul_prior_costs[keys] = math.log(1 / tmp)
+
+        self.prior_costs = dict(Counter(sl_prior_costs) + Counter(ul_prior_costs))
 
         # Convert counts of the likelihood table to probability
+        sl_ld_costs = {}
         for prior, word_counts in self.ld_counts.iteritems():
             # for i in word_counts.itervalues():
             #     current_count+= i
+
             current_count = sum([i for i in word_counts.itervalues()])
-            if use_unsupervised == True:
-                if prior in self.us_ld_counts:
-                    current_count += sum(self.us_ld_counts[prior].itervalues())
             for word, count in word_counts.iteritems():
                 numerator = count
-                if use_unsupervised == True:
-                    if prior in self.us_ld_counts:
-                        curr_cost = math.log(1 / (0.1 / self.class_word_counts[prior]))
-                        if word in self.us_ld_counts[prior]:
-                            curr_cost = self.us_ld_counts[prior][word]
-                        numerator += curr_cost
                 curr_prob = (1.0 * numerator) / current_count
-                if prior not in self.ld_costs:
-                    self.ld_costs[prior] = {}
-                self.ld_costs[prior][word] = math.log(1 / curr_prob)
+                if prior not in sl_ld_costs:
+                    sl_ld_costs[prior] = {}
+                sl_ld_costs[prior][word] = math.log(1 / curr_prob)
+        ul_ld_costs = {}
+        if use_unsupervised == True:
+            for prior, word_counts in self.us_ld_counts.iteritems():
+                # for i in word_counts.itervalues():
+                #     current_count+= i
+
+                current_count = sum([i for i in word_counts.itervalues()])
+                for word, count in word_counts.iteritems():
+                    numerator = count
+                    curr_prob = (1.0 * numerator) / current_count
+                    if prior not in ul_ld_costs:
+                        ul_ld_costs[prior] = {}
+                        ul_ld_costs[prior][word] = math.log(1 / curr_prob)
+                        
+        for sl_priors in sl_ld_costs.iterkeys():
+            self.ld_costs[sl_priors]=dict(Counter(sl_ld_costs[sl_priors]) + Counter(ul_ld_costs[sl_priors]))
+
+        for ul_priors in ul_ld_costs.iterkeys():
+            self.ld_costs[ul_priors]=dict(Counter(sl_ld_costs[ul_priors]) + Counter(ul_ld_costs[ul_priors]))
 
         for prior, count in self.prior_counts.iteritems():
             current_count = sum(self.ld_counts[prior].itervalues()) + 0.1
-            if use_unsupervised == True:
-                if prior in self.us_ld_counts:
-                    current_count += sum(self.us_ld_counts[prior].itervalues())
             if prior not in self.class_word_counts:
                 self.class_word_counts[prior] = {}
             self.class_word_counts[prior] = current_count
@@ -157,7 +173,7 @@ class Model:
                     curr_cost = self.ld_costs[classes][word]
                 cost += curr_cost
 
-            result_dict[classes] = cost # + self.prior_costs[classes]
+            result_dict[classes] = cost  # + self.prior_costs[classes]
         return min(result_dict.iteritems(), key=operator.itemgetter(1))[0]
 
     def load(self, file_path):
