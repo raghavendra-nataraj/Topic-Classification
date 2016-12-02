@@ -21,8 +21,10 @@ class Model:
         self.prior_counts = {}
         self.ld_counts = {}
         self.prior_costs = {}
+        self.old_priorlist = {}
         self.ld_costs = {}
         self.us_prior_counts = {}
+        self.old_us_prior = {}
         self.us_ld_counts = {}
         self.class_word_counts = {}
 
@@ -35,6 +37,17 @@ class Model:
         ret_string += pprint.pformat(str(self.class_word_counts)) + "\n"
         return ret_string
 
+    def checkCountSame(self):
+        result=True
+        for key in self.us_prior_counts.keys():
+            if key not in self.old_us_prior:
+                result = False
+                break
+            if (self.old_us_prior[key] - self.us_prior_counts[key])>10:
+                result = False
+                break
+        return result
+    
     def train(self, sl, ul, class_list):
         # training using the supervised learning list
 
@@ -42,15 +55,19 @@ class Model:
         self.calculate_probabilties(use_unsupervised=False)
         train_counter = 0
         if len(ul) > 0:
-            while (train_counter < 100):
+            while (train_counter < 20):
                 train_counter += 1
                 ul_with_class = []
+                self.old_us_prior = deepcopy(self.us_prior_counts)
                 for document, topic in ul:
                     predicted_class = self.test(document, class_list)
                     ul_with_class.append((document, predicted_class))
 
                 self.calculate_ul_counts(ul_with_class)
                 self.calculate_probabilties(use_unsupervised=True)
+                print "lopper"
+                if self.checkCountSame():
+                    break
 
     def calculate_sl_counts(self, sl_list):
         for word_list, topic in sl_list:
@@ -69,6 +86,8 @@ class Model:
                     self.ld_counts[topic][w] = 1
 
     def calculate_ul_counts(self, ul_list):
+        self.us_prior_counts = {}
+        self.us_ld_counts = {}
         for word_list, classification in ul_list:
             if classification in self.us_prior_counts:
                 self.us_prior_counts[classification] += 1
