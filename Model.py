@@ -1,20 +1,27 @@
 from collections import Counter
 import operator
 import math
+from copy import deepcopy
 
 class Model():
     def __init__(self):
         self.words_col = {}
         self.prior = {}
-        self.tot_sup_list = 0
         self.likelyhood = {}
-
+        self.cross_vlist = []
+        
     def cost_of(self, prob):
         return math.log(1/prob)
+
+    def clear_probs(self):
+        self.words_col = {}
+        self.prior = {}
+        self.likelyhood = {}
     
-    def train(self,supervised_list):
-        self.tot_sup_list = float(len(supervised_list))
-        for sl in supervised_list:
+    def calculate_probs(self,s_list):
+        tot_sup_list = float(len(s_list))
+        self.clear_probs()
+        for sl in s_list:
             if sl[1] not in self.words_col:
                 self.prior[sl[1]] = 1
                 self.words_col[sl[1]] = Counter()
@@ -23,7 +30,7 @@ class Model():
             self.prior[sl[1]]+= 1
 
         for topic in self.prior:
-            self.prior[topic]/=self.tot_sup_list
+            self.prior[topic]/=tot_sup_list
             self.prior[topic] = self.cost_of(self.prior[topic])
 
         for topic in self.words_col.keys():
@@ -33,7 +40,33 @@ class Model():
             for word in self.words_col[topic]:
                 self.likelyhood[topic][word] = self.cost_of(self.words_col[topic][word]/length)
             self.likelyhood[topic]["missing"] = self.cost_of(0.1/length)
+    
+    def train(self,supervised_list,unsupervised_list):
+        if len(unsupervised_list) > 0:
+            self.calculate_probs(supervised_list)
+            for i in range(3):
+                self.cross_vlist = deepcopy(supervised_list)
+                ul = deepcopy(unsupervised_list)
+                self.cross_validate(ul)
+                self.calculate_probs(self.cross_vlist)
+        else:
+            self.calculate_probs(supervised_list)
 
+    def cross_validate(self,test_list):
+        result = {}
+        len_test = float(len(test_list))
+        count = 0
+        for doc in test_list:
+            for topic in self.prior.keys():
+                res = sum([self.likelyhood[topic][word] +self.prior[topic] if word in self.likelyhood[topic] else self.likelyhood[topic]["missing"]+self.prior[topic] for word in doc[0]])
+                result[topic] = res
+            prediction = min(result.iteritems(),key = operator.itemgetter(1))[0]
+            self.cross_vlist.append((Counter(doc[0]),prediction))
+            if prediction == doc[1]:
+                count+=1
+        print count/len_test
+
+            
     def test(self,test_list):
         len_test = float(len(test_list))
         count = 0

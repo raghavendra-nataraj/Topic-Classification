@@ -8,6 +8,12 @@ import pprint
 from collections import Counter
 MODES = {"train", "test"}
 
+def flip():
+    if random.random() > fraction:
+        return False
+    else:
+        return True
+
 try:
     mode = sys.argv[1]
     directory = sys.argv[2]
@@ -41,6 +47,7 @@ if fraction < 0 or fraction > 1:
 p = EmailParser.Parser()
 
 supervised_list = []
+unsupervised_list = []
 test_list = []
 for path, dirs, files in os.walk(directory):
     break
@@ -48,14 +55,17 @@ for folders in dirs:
     email_text = p.parse(directory + "/" + folders + "/")
     for f in email_text:
         if mode == "train":
-            supervised_list.append((Counter(f), folders))
+            if(flip()):
+                supervised_list.append((Counter(f), folders))
+            else:
+                unsupervised_list.append((f, folders))
         elif mode == "test":
             test_list.append((f, folders))
 
 
 if mode == "train":
     model = Model.Model()
-    model.train(supervised_list)
+    model.train(supervised_list,unsupervised_list)
     model.save(file_path)
 
 if mode == "test":
