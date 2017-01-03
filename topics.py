@@ -55,8 +55,8 @@ for path, dirs, files in os.walk(directory):
 for folders in dirs:
     email_text = p.parse(directory + "/" + folders + "/")
     for f in email_text:
+        if folders not in topics_list: topics_list.append(folders)
         if mode == "train":
-            if folders not in topics_list: topics_list.append(folders)
             if(flip()):
                 supervised_list.append((f, folders))
             else:
@@ -73,6 +73,8 @@ if mode == "train":
 
 if mode == "test":
     model = Model.Model()
+    model.topics_class = topics_list
     model.load(file_path)
-    model.test(test_list)
-    
+    result = model.test(test_list)
+    for r in result:
+        print r,":",result[r]

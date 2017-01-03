@@ -81,13 +81,23 @@ class Model():
         len_test = float(len(test_list))
         count = 0
         result = {}
+        ter_result ={}
+        for topic in self.topics_class:
+            ter_result[topic] = {}
+            ter_result[topic]["yes"] = 0
+            ter_result[topic]["no"] = 0
         for doc in test_list:
             for topic in self.prior.keys():
                 res = sum([self.likelyhood[topic][word] +self.prior[topic] if word in self.likelyhood[topic] else self.likelyhood[topic]["missing"]+self.prior[topic] for word in doc[0]])
                 result[topic] = res
-            if min(result.iteritems(),key = operator.itemgetter(1))[0] == doc[1]:
+            prediction = min(result.iteritems(),key = operator.itemgetter(1))[0]
+            if prediction == doc[1]:
+                ter_result[doc[1]]["yes"]+=1
                 count+=1
-        print count/len_test
+            else:
+                ter_result[doc[1]]["no"]+=1
+        print "Accuaracy = ",(count/len_test) * 100
+        return ter_result
 
 
     def save(self, file_path):
