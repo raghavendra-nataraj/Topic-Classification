@@ -49,14 +49,16 @@ p = EmailParser.Parser()
 supervised_list = []
 unsupervised_list = []
 test_list = []
+topics_list = []
 for path, dirs, files in os.walk(directory):
     break
 for folders in dirs:
     email_text = p.parse(directory + "/" + folders + "/")
     for f in email_text:
         if mode == "train":
+            if folders not in topics_list: topics_list.append(folders)
             if(flip()):
-                supervised_list.append((Counter(f), folders))
+                supervised_list.append((f, folders))
             else:
                 unsupervised_list.append((f, folders))
         elif mode == "test":
@@ -65,6 +67,7 @@ for folders in dirs:
 
 if mode == "train":
     model = Model.Model()
+    model.topics_class = topics_list
     model.train(supervised_list,unsupervised_list)
     model.save(file_path)
 
