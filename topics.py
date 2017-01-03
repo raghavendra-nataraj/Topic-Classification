@@ -5,7 +5,7 @@ import random
 import EmailParser
 import Model
 import pprint
-
+from collections import Counter
 MODES = {"train", "test"}
 
 try:
@@ -38,3 +38,28 @@ if fraction < 0 or fraction > 1:
     print("Fraction should be equal or between 0 and 1")
     sys.exit(5)
 
+p = EmailParser.Parser()
+
+supervised_list = []
+test_list = []
+for path, dirs, files in os.walk(directory):
+    break
+for folders in dirs:
+    email_text = p.parse(directory + "/" + folders + "/")
+    for f in email_text:
+        if mode == "train":
+            supervised_list.append((Counter(f), folders))
+        elif mode == "test":
+            test_list.append((f, folders))
+
+
+if mode == "train":
+    model = Model.Model()
+    model.train(supervised_list)
+    model.save(file_path)
+
+if mode == "test":
+    model = Model.Model()
+    model.load(file_path)
+    model.test(test_list)
+    
