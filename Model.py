@@ -64,7 +64,7 @@ class Model():
             self.cross_vlist.append((Counter(doc[0]),prediction))
             if prediction == doc[1]:
                 count+=1
-        print count/len_test
+        #print count/len_test
 
             
     def test(self,test_list):
